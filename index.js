@@ -230,7 +230,7 @@ Blobs.prototype.refreshToken = function(cb) {
   }, function (err, res, body) {
     if (err) return cb(err, res, body)
     if (res.statusCode > 299) return cb(new Error('refresh error'), res, body)
-    self.options.access_token = body.access_token
+    self.options.refresh_token = body.access_token;
     cb(null, res, body)
   })
 }
