@@ -154,9 +154,9 @@ Blobs.prototype.request = function(opts, cb) {
   var self = this
   if (!opts) opts = {}
   console.log('Options: ', self.options);
-  var token = self.options.refresh_token;
+  var token = self.options.access_token || self.options.refresh_token;
   console.log('Token : ', token);
-  if (!token) return cb(new Error('you must specify google token'))
+  if (!token) return cb(new Error('you must specify google token'));
 
   var reqOpts = {
     method: opts.method || 'POST',
@@ -178,6 +178,8 @@ Blobs.prototype.request = function(opts, cb) {
     // token may have expired, refresh + retry
     if (resp.statusCode > 299) return self.refreshToken(function(err) {
       if (err) return cb(err)
+      reqOpts.headers.Authorization = 'Bearer ' + self.options.access_token || self.options.refresh_token;
+      console.log('New token : ', reqOpts.headers);
       request(reqOpts, cb)
     })
     if (cb) cb(err, resp, body)
@@ -197,7 +199,6 @@ Blobs.prototype.get = function(hash, cb) {
 
   return self.request(reqOpts, function(err, resp, results) {
     console.log('Get error: ', err);
-    console.log('Get result : ', results);
     if (err || resp.statusCode > 299) return cb(results);
     cb(null, results.items[0])
   })
@@ -236,7 +237,7 @@ Blobs.prototype.refreshToken = function(cb) {
     if (err) return cb(err, res, body)
     if (res.statusCode > 299) return cb(new Error('refresh error'), res, body)
     console.log(body);
-    self.options.refresh_token = body.access_token;
+    self.options.access_token = body.access_token;
     cb(null, res, body)
   })
 }
